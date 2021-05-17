@@ -2,7 +2,7 @@
 Configuration file for dataset paths
 """
 
-root_dir = "./dataset"
+root_dir = "/data/datasets/BSUV"
 save_dir = "./saved_models"
 
 # Paths for the CDNet2014 images, their background frames, segmentation maps and ground truths
@@ -17,11 +17,12 @@ current_fr_fpm_path = f"{root_dir}/currentFrFpm/{{cat}}/{{vid}}/fpm{{fr_id}}.jpg
 empty_bg_fpm_path = f"{root_dir}/emptyBgFpm/{{cat}}/{{vid}}/fpm{{fr_id}}.jpg"
 recent_bg_fpm_path = f"{root_dir}/recentBgFpm/{{cat}}/{{vid}}/fpm{{fr_id}}.jpg"
 
-# Directory for the selected background frames
-selected_frs_200_csv = f"{root_dir}/CDNET2014_selected_frames_200.csv"
-
 # Path to the temp roi file
 temp_roi_path = f"{root_dir}/currentFr/{{cat}}/{{vid}}/temporalROI.txt"
+
+# Directory for the selected background frames
+root_dir = "./dataset"
+selected_frs_200_csv = f"{root_dir}/CDNET2014_selected_frames_200.csv"
 
 # Locations of each video in the CSV file
 csv_header2loc = {'len': 160, 'highway': 1, 'pedestrians': 4, 'office': 7, 'PETS2006': 10, 'badminton': 13, 'traffic': 16,
