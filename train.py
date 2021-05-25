@@ -9,10 +9,11 @@ import torch.optim as optim
 from utils import augmentations as aug
 from utils.data_loader import CDNet2014Loader
 from utils import losses
-from models.unet import unet_vgg16
+from models.unet import UNetVgg16,UNetMobilenetv3, UNetVgg16Small, UNetMobilenetv3Small
 from utils.eval_utils import logVideos
 from tensorboardX import SummaryWriter
 import time
+
 
 
 parser = argparse.ArgumentParser(description='BSUV-Net-2.0 pyTorch')
@@ -215,7 +216,13 @@ num_inp = ((1*(empty_bg != "no")) + (1*recent_bg) + 1)
 num_ch = num_inp * num_ch_per_inp
 
 if network == "unetvgg16":
-    model = unet_vgg16(inp_ch=num_ch, skip=1)
+    model = UNetVgg16(inp_ch=num_ch, skip=1)
+elif network == "unetmobilenet":
+    model = UNetMobilenetv3(input_channel=num_ch, skip=1)
+elif network == "unetvgg16small":
+    model = UNetVgg16Small(inp_ch=num_ch, skip=1)
+elif network == "unetmobilenetsmall":
+    model = UNetMobilenetv3Small(input_channel=num_ch, skip=1)
 else:
     raise ValueError(f"network = {network} is not defined")
 
