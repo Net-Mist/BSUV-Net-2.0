@@ -20,11 +20,11 @@ CD input (dict): key                -> value (value=None if that field is not us
 CD output (Size: (HxWx1), Type: float): Background Segmentation Label for resepctive CD input.
                                         Follows the CDNet2014 format
 """
-
-import torchvision.transforms as tvtf
-import torch
-import numpy as np
 import cv2
+import numpy as np
+import torch
+import torchvision.transforms as tvtf
+
 from utils import augmentations as aug
 from utils.data_loader import CDNet2014Loader
 
@@ -160,7 +160,7 @@ class CenterCrop:
 
         cd_out = cd_out[j:j+self.out_dim[1], i:i+self.out_dim[0], :]
         return cd_inp, cd_out
-        
+
 class RandomCrop:
     """ Extracts a random crop from CD input and CD output
 
@@ -257,9 +257,9 @@ class RandomZoomCrop:
         cd_inp, cd_out = self.centerCrop(cd_inp, cd_out)
         h, w, c = cd_out.shape
         if np.random.uniform() <= self.zoom_prob:
-            
+
             zoom_ratio_recent = np.random.uniform(low=0.0, high=self.max_zoom_ratio_recent)
-            zoom_ratio_empty = np.random.uniform(low=zoom_ratio_recent, high=self.max_zoom_ratio_empty)   
+            zoom_ratio_empty = np.random.uniform(low=zoom_ratio_recent, high=self.max_zoom_ratio_empty)
 
             if np.random.uniform() < 0.5:
                 w_c, h_c = np.floor(w / (1 + (zoom_ratio_empty*self.num_frames))), np.floor(h / (1 + (zoom_ratio_empty*self.num_frames)))
@@ -274,7 +274,7 @@ class RandomZoomCrop:
 
             if self.debug:
                 print(f'Zoom ratio empty = {zoom_ratio_empty}, Zoom ratio recent = {zoom_ratio_recent}')
-            
+
             for inp_type in ["empty_bg", "empty_bg_seg", "recent_bg", "recent_bg_seg"]:
                 im = cd_inp[inp_type]
                 if im is not None:
@@ -290,7 +290,7 @@ class RandomZoomCrop:
 
                     cd_inp[inp_type] = im_transformed / self.num_frames
                     del im
-            
+
 
         return cd_inp, cd_out
 
@@ -377,10 +377,10 @@ class RandomMask:
                     cd_inp[inp_type] = masked_im
                     del im
             cd_out[mask_label == 1] = 1
-            
+
         return cd_inp, cd_out
 
-      
+
 class ToTensor:
     """ Converts CD input and CD output into tensors.
     Each defined element of CD input will be converted tensors and than concataneted in the

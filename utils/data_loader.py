@@ -1,11 +1,13 @@
 import csv
-import os
-import numpy as np
-import random
-import torch.utils.data as data
-from configs import data_config
-import cv2
 import glob
+import os
+import random
+
+import cv2
+import numpy as np
+import torch.utils.data as data
+
+from configs import data_config
 
 class CDNet2014Loader(data.Dataset):
     """
@@ -99,7 +101,7 @@ class CDNet2014Loader(data.Dataset):
                 empty_bg_id = random.choice(
                     os.listdir(
                         data_config.empty_bg_root.format(cat=cat, vid=vid)
-                    ))[-10:-4] 
+                    ))[-10:-4]
                 empty_bg_path = data_config.empty_bg_path.format(
                     cat=cat, vid=vid, fr_id=empty_bg_id)
                 empty_bg_fpm_path = data_config.empty_bg_fpm_path.format(

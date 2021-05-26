@@ -1,19 +1,24 @@
 #Imports
-
 import argparse
 import os
-import configs.data_config as data_config
-import configs.full_cv_config as tr_test_config
-import torch
-import torch.optim as optim
-from utils import augmentations as aug
-from utils.data_loader import CDNet2014Loader
-from utils import losses
-from models.unet import UNetVgg16,UNetMobilenetv3, UNetVgg16Small, UNetMobilenetv3Small
-from utils.eval_utils import logVideos
-from tensorboardX import SummaryWriter
 import time
 
+import torch
+import torch.optim as optim
+from tensorboardX import SummaryWriter
+from tqdm import tqdm
+
+import configs.data_config as data_config
+import configs.full_cv_config as tr_test_config
+from  models.DDRNet_23_slim import DualResNet_imagenet
+from models.unet import UNetMobilenetv3
+from models.unet import UNetMobilenetv3Small
+from models.unet import UNetVgg16
+from models.unet import UNetVgg16Small
+from utils import augmentations as aug
+from utils import losses
+from utils.data_loader import CDNet2014Loader
+from utils.eval_utils import logVideos
 
 
 parser = argparse.ArgumentParser(description='BSUV-Net-2.0 pyTorch')
@@ -124,7 +129,7 @@ crop_and_aug = [aug.RandomCrop(inp_size)]
 
 if aug_rsc:
     crop_and_aug.append(aug.RandomJitteredCrop(inp_size))
-    
+
 if aug_ptz > 0:
     crop_and_aug.append(
         [
@@ -158,8 +163,8 @@ if aug_ioa > 0:
     ]
 
     dataloader_mask = CDNet2014Loader(
-        iom_dataset, 
-        empty_bg=empty_bg, 
+        iom_dataset,
+        empty_bg=empty_bg,
         recent_bg=recent_bg,
         segmentation_ch=seg_ch,
         transforms=mask_transforms,
@@ -223,6 +228,8 @@ elif network == "unetvgg16small":
     model = UNetVgg16Small(inp_ch=num_ch, skip=1)
 elif network == "unetmobilenetsmall":
     model = UNetMobilenetv3Small(input_channel=num_ch, skip=1)
+elif network == "ddrnet_23_slim":
+    model = DualResNet_imagenet()
 else:
     raise ValueError(f"network = {network} is not defined")
 
@@ -266,7 +273,7 @@ for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple t
         running_loss, running_acc, running_f = 0.0, 0.0, 0.0
         if phase == "Train":
             optimizer.zero_grad()
-        for i, data in enumerate(tensorloader):
+        for i, data in tqdm(enumerate(tensorloader)):
             if phase == "Train":
                 model.train()
             else:
@@ -327,7 +334,7 @@ for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple t
             "optimizer": optimizer.state_dict()
         }
 
-        torch.save(checkpoint, f"{mdl_dir}/checkpoint.pth")  
+        torch.save(checkpoint, f"{mdl_dir}/checkpoint.pth")
         if (epoch + 1) % 20 == 0:
             torch.save(model, f"{mdl_dir}/model_epoch{epoch + 1}.mdl")
 
@@ -342,15 +349,15 @@ print('Finished Training')
 model = torch.load(f"{mdl_dir}/model_best.mdl").cuda()
 csv_path = "./log.csv"
 logVideos(
-    dataset_test, 
-    model, 
-    fname, 
+    dataset_test,
+    model,
+    fname,
     csv_path,
-    empty_bg=empty_bg, 
+    empty_bg=empty_bg,
     recent_bg=recent_bg,
-    segmentation_ch=seg_ch, 
-    save_vid=0, 
-    set_number=set_number, 
+    segmentation_ch=seg_ch,
+    save_vid=0,
+    set_number=set_number,
     debug=0
 )
 print(f"Saved results to {csv_path}")

@@ -1,7 +1,6 @@
 """
 Visualizations for input and output tensors
 """
-
 from matplotlib import pyplot as plt
 
 def tensor2double(inp, segmentation_ch=False,
@@ -12,7 +11,7 @@ def tensor2double(inp, segmentation_ch=False,
     Assumes batch_size=1
 
     inp (Tensor of size (CxWxH)): Input tensor of size 1xCxWxH
-    
+
     returns:
     (np array iof size (WxHXC)): output array
     """

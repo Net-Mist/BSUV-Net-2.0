@@ -29,4 +29,3 @@ Use this repo for inference: [https://github.com/ozantezcan/BSUV-Net-inference](
 
 ## Training and Cross-Validation with other datasets.
 Change `./configs/data_config.py` and `./configs/full_cv_config.py` for training BSUV-Net 2.0 with different datasets.
-

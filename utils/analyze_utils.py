@@ -1,5 +1,5 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
 
 def getOveralStats(log_path, sofa_num=15, chose_best=False, algo_name='new_algo'):
     ''' Reads the end results of several algorithms and returns a pandas dataframe

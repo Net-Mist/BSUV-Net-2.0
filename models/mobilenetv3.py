@@ -1,10 +1,11 @@
+import math
+
 import torch.nn as nn
 from torch import Tensor
-import math
 
 
 def _make_divisible(v: int, divisor: int, min_value=None):
-    """ This function is taken from 
+    """ This function is taken from
     https://github.com/tensorflow/models/blob/master/research/slim/nets/mobilenet/mobilenet.py
     It ensures that all layers have a channel number that is divisible by 8
 

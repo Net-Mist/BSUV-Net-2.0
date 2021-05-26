@@ -2,8 +2,12 @@
 16-layer U-Net model
 """
 import torch.nn as nn
-from models.unet_tools import UNetDown, UNetUp, ConvSig, FCNN
+
 from .mobilenetv3 import get_mobilenet_parts
+from models.unet_tools import ConvSig
+from models.unet_tools import FCNN
+from models.unet_tools import UNetDown
+from models.unet_tools import UNetUp
 
 
 class UNet(nn.Module):
@@ -76,9 +80,9 @@ class UNetMobilenetv3(UNet):
 
         cfgs = [
             # k, t, c, SE, HS, s
-            [3,    1,  16, 1, 0, 2], 
-            [3,  4.5,  24, 0, 0, 2], 
-            [3, 3.67,  24, 0, 0, 1], 
+            [3,    1,  16, 1, 0, 2],
+            [3,  4.5,  24, 0, 0, 2],
+            [3, 3.67,  24, 0, 0, 1],
             [5,    4,  40, 1, 1, 2],
             [5,    6,  40, 1, 1, 1],
             [5,    6,  40, 1, 1, 1],
@@ -115,15 +119,18 @@ class UNetMobilenetv3(UNet):
         print("enc5")
         print(self.enc5)
 
+class unet_mobilenetv3(UNetMobilenetv3):
+    pass
+
 class UNetMobilenetv3Small(UNet):
     def __init__(self, input_channel: int, kernel_size=3, skip=True):
         super().__init__(kernel_size, skip)
 
         cfgs = [
             # k, t, c, SE, HS, s
-            [3,    1,  16, 1, 0, 2], 
-            [3,  4.5,  24, 0, 0, 2], 
-            [3, 3.67,  24, 0, 0, 1], 
+            [3,    1,  16, 1, 0, 2],
+            [3,  4.5,  24, 0, 0, 2],
+            [3, 3.67,  24, 0, 0, 1],
             [5,    4,  40, 1, 1, 2],
             [5,    6,  40, 1, 1, 1],
             [5,    6,  40, 1, 1, 1],
@@ -182,6 +189,12 @@ class UNetVgg16(UNet):
         self.dec1 = UNetUp(128, skip*64, 64, 2, batch_norm=True, kernel_size=kernel_size)
 
         self.out = ConvSig(64)
+
+class unet_vgg16(UNetVgg16):
+    pass
+
+class unet16(UNetVgg16):
+    pass
 
 class UNetVgg16Small(UNet):
     """

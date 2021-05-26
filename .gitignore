@@ -9,3 +9,5 @@ emptyBg
 emptyBgFpm
 recentBg
 recentBgFpm
+*.onnx
+trace*.json

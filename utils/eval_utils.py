@@ -1,18 +1,20 @@
 import csv
-import torch
-from utils.losses import getValid
-from utils.data_loader import CDNet2014Loader
-from utils.visualize import tensor2double
-from utils import augmentations as aug
-import cv2
-import configs.data_config as data_config
 import os
+
+import cv2
 import numpy as np
+import torch
+
+import configs.data_config as data_config
+from utils import augmentations as aug
+from utils.data_loader import CDNet2014Loader
+from utils.losses import getValid
+from utils.visualize import tensor2double
 
 # Locations of each video in the CSV file
 csv_header2loc = data_config.csv_header2loc
 
-def evalVideo(cat, vid, model, empty_bg=False, recent_bg=False, segmentation_ch=False, eps=1e-5, 
+def evalVideo(cat, vid, model, empty_bg=False, recent_bg=False, segmentation_ch=False, eps=1e-5,
               save_vid=False, save_outputs="", model_name="", debug=False, use_selected=False, multiplier=16):
     """ Evalautes the trained model on all ROI frames of cat/vid
     Args:
@@ -84,7 +86,7 @@ def evalVideo(cat, vid, model, empty_bg=False, recent_bg=False, segmentation_ch=
 
         input = zeropad(input)
         output = model(input)
-        
+
         output = output[:, :, :h, :w]
         label_1d, output_1d = getValid(label, output)
 
@@ -112,7 +114,7 @@ def evalVideo(cat, vid, model, empty_bg=False, recent_bg=False, segmentation_ch=
                 output_fr[:, :, k] = output_np
             fname = os.path.join(output_path, cat, vid, f"bin{str(i+1).zfill(6)}.png")
             cv2.imwrite(fname, (output_fr*255).astype(np.uint8))
-            
+
         tp += eps * torch.sum(label_1d * output_1d).item()
         fp += eps * torch.sum((1-label_1d) * output_1d).item()
         fn += eps * torch.sum(label_1d * (1-output_1d)).item()
@@ -152,7 +154,7 @@ def logVideos(dataset, model, model_name, csv_path, empty_bg=False, recent_bg=Fa
         for vid in vids:
             print(vid)
             fnr, prec, f_score = evalVideo(cat, vid, model, empty_bg=empty_bg, recent_bg=recent_bg,
-                                           segmentation_ch=segmentation_ch, eps=eps, save_vid=save_vid, 
+                                           segmentation_ch=segmentation_ch, eps=eps, save_vid=save_vid,
                                            save_outputs=save_outputs, model_name=model_name, debug=debug)
 
             new_row[csv_header2loc[vid]] = fnr
