@@ -158,6 +158,7 @@ if aug_ioa > 0:
         'intermittentObjectMotion':dataset_tr['intermittentObjectMotion']
     }
     mask_transforms = [
+        [aug.Resize((inp_size[0]*1.3, inp_size[1]*1.3))],
         [aug.RandomCrop(inp_size)],
         *additional_augs_iom,
     ]
@@ -184,6 +185,7 @@ mean_seg = [x for x in [0.5]]
 std_seg = [x for x in [0.5]]
 
 transforms_tr = [
+    [aug.Resize((inp_size[0]*1.3, inp_size[1]*1.3))],
     crop_and_aug,
     *additional_augs,
     [aug.ToTensor()],
@@ -192,6 +194,7 @@ transforms_tr = [
 ]
 
 transforms_test = [
+    [aug.Resize((inp_size[0]*1.3, inp_size[1]*1.3))],
     [aug.CenterCrop(inp_size)],
     [aug.ToTensor()],
     [aug.NormalizeTensor(mean_rgb=mean_rgb, std_rgb=std_rgb,
@@ -209,10 +212,10 @@ dataloader_test = CDNet2014Loader(
 )
 
 tensorloader_tr = torch.utils.data.DataLoader(
-    dataset=dataloader_tr, batch_size=batch_size, shuffle=True, num_workers=1
+    dataset=dataloader_tr, batch_size=batch_size, shuffle=True, num_workers=20
 )
 tensorloader_test = torch.utils.data.DataLoader(
-    dataset=dataloader_test, batch_size=batch_size, shuffle=False, num_workers=1
+    dataset=dataloader_test, batch_size=batch_size, shuffle=False, num_workers=20
 )
 
 # load model

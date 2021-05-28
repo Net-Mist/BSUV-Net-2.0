@@ -1,5 +1,5 @@
 """
-Data augmentation tools for chnagedetection type input and outputs
+Data augmentation tools for changedetection type input and outputs
 
 Definitions of the variables used in this code are as follows
 
@@ -17,7 +17,7 @@ CD input (dict): key                -> value (value=None if that field is not us
                  "current_fr"       -> Current frame in RGB.
                                        Size: (HxWx3), Type: float
 
-CD output (Size: (HxWx1), Type: float): Background Segmentation Label for resepctive CD input.
+CD output (Size: (HxWx1), Type: float): Background Segmentation Label for respective CD input.
                                         Follows the CDNet2014 format
 """
 import cv2
@@ -25,11 +25,9 @@ import numpy as np
 import torch
 import torchvision.transforms as tvtf
 
-from utils import augmentations as aug
-from utils.data_loader import CDNet2014Loader
-
 only_rgb_inputs = ["empty_bg", "recent_bg",  "current_fr"]
 only_seg_inputs = ["empty_bg_seg", "recent_bg_seg",  "current_fr_seg"]
+
 
 class AdditiveRandomIllumation:
     """Applies additive random illumination change to all frames and also increases
@@ -43,6 +41,7 @@ class AdditiveRandomIllumation:
                 for all color channels and between color channels.
 
     """
+
     def __init__(self, std_global, std_illdiff=(0, 0), debug=False):
         self.std_global = std_global
         self.std_illdiff = std_illdiff
@@ -72,6 +71,7 @@ class AdditiveRandomIllumation:
                                   (np.random.randn(3) * self.std_illdiff[1])
 
         return cd_inp, cd_out
+
 
 class AdditiveNoise:
     """Adds gaussian noise to CD input
@@ -104,6 +104,7 @@ class AdditiveNoise:
 
         return cd_inp, cd_out
 
+
 class Resize:
     """Resizes CD input and CD output
 
@@ -112,6 +113,7 @@ class Resize:
         interploation (optional): One of the methods from opencv2 interpolation methods.
                                   Default is cv2.INTER_LINEAR
     """
+
     def __init__(self, out_dim, interpolation=cv2.INTER_LINEAR):
         self.out_dim = out_dim
         self.interpolation = interpolation
@@ -125,12 +127,20 @@ class Resize:
             CD input: Resized CD input.
             CD output: Resized CD output.
         """
-        for inp_type, im in cd_inp.items():
-            if im is not None:
-                cd_inp[inp_type] = cv2.resize(im, self.out_dim, interpolation=self.interpolation)
-                del im
-        cd_out = cv2.resize(cd_out, self.out_dim, interpolation=self.interpolation)
+
+        # compute scaling factor
+        input_h, input_w, _  = cd_inp['empty_bg'].shape
+        factor = max(self.out_dim[0] / input_w, self.out_dim[1] / input_h)
+        # if factor is lower than 1 then don't transform
+        if factor > 1:
+            for inp_type, im in cd_inp.items():
+                if im is not None:
+                    cd_inp[inp_type] = cv2.resize(im, None, fx=factor, fy=factor, interpolation=self.interpolation)
+                    del im
+            cd_out = cv2.resize(cd_out, None, fx=factor, fy=factor, interpolation=self.interpolation)
+            cd_out = cd_out[:, :, np.newaxis]
         return cd_inp, cd_out
+
 
 class CenterCrop:
     """ Extracts the center crop from CD input and CD output
@@ -138,6 +148,7 @@ class CenterCrop:
     Args:
         out_dim ((int, int)): Target width and height of the crop
     """
+
     def __init__(self, out_dim):
         self.out_dim = out_dim
 
@@ -161,12 +172,14 @@ class CenterCrop:
         cd_out = cd_out[j:j+self.out_dim[1], i:i+self.out_dim[0], :]
         return cd_inp, cd_out
 
+
 class RandomCrop:
     """ Extracts a random crop from CD input and CD output
 
     Args:
         out_dim ((int, int)): Target width and height of the crop
     """
+
     def __init__(self, out_dim):
         self.out_dim = out_dim
 
@@ -190,6 +203,7 @@ class RandomCrop:
         cd_out = cd_out[j:j+self.out_dim[1], i:i+self.out_dim[0], :]
         return cd_inp, cd_out
 
+
 class RandomJitteredCrop:
     """ Extracts a random crop from CD input and CD output The output will have a jitter effect
 
@@ -198,6 +212,7 @@ class RandomJitteredCrop:
         max_jitter (int): Max number of pixels allowed to shift between background and recent frames (default 10)
         jitter_prob (float): probability of applying random jitter (default 0.5)
     """
+
     def __init__(self, out_dim, max_jitter=5, jitter_prob=1.0, debug=False):
         self.out_dim = out_dim
         self.max_jitter = max_jitter
@@ -235,6 +250,7 @@ class RandomJitteredCrop:
         cd_out = cd_out[i:i+self.out_dim[1], j:j+self.out_dim[0], :]
         return cd_inp, cd_out
 
+
 class RandomZoomCrop:
     """ Changes the background to zoomed out version
 
@@ -245,7 +261,8 @@ class RandomZoomCrop:
         num_frames (int): Number of frames to be averaged for reference frames (default 50)
         debug (boolean): Debuging purposes
     """
-    def __init__(self, out_dim, max_zoom_ratio_empty=0.04, max_zoom_ratio_recent = 0.02, zoom_prob=1.0, num_frames=10, debug=False):
+
+    def __init__(self, out_dim, max_zoom_ratio_empty=0.04, max_zoom_ratio_recent=0.02, zoom_prob=1.0, num_frames=10, debug=False):
         self.centerCrop = CenterCrop(out_dim)
         self.max_zoom_ratio_empty = max_zoom_ratio_empty
         self.max_zoom_ratio_recent = max_zoom_ratio_recent
@@ -291,8 +308,8 @@ class RandomZoomCrop:
                     cd_inp[inp_type] = im_transformed / self.num_frames
                     del im
 
-
         return cd_inp, cd_out
+
 
 class RandomPanCrop:
     """ Extracts a random crop from CD input and CD output The output will have a pan effect
@@ -303,6 +320,7 @@ class RandomPanCrop:
         num_frames_recent (int): Number of frames to be averaged for augemnted recent reference
         num_frames_empty (int): Number of frames to be averaged for augemnted empty reference
     """
+
     def __init__(self, out_dim, max_pixel_shift=5, num_frames_recent=10, num_frames_empty=20, debug=False):
         self.out_dim = out_dim
         self.max_pixel_shift = max_pixel_shift
@@ -319,7 +337,7 @@ class RandomPanCrop:
         pixel_shift = np.random.uniform(low=0, high=max_pixel_shift)
         j = np.random.randint(low=0, high=w - (self.out_dim[0] + (pixel_shift * self.num_frames_empty)))
         i = np.random.randint(low=0, high=h - self.out_dim[1])
-        left_pan = np.random.randint(2) # left pan if 1, right pan if 0
+        left_pan = np.random.randint(2)  # left pan if 1, right pan if 0
 
         if self.debug:
             print("Left  Pan") if left_pan else print("Right Pan")
@@ -345,6 +363,7 @@ class RandomPanCrop:
         cd_out = cd_out[i:i+self.out_dim[1], j+offset:j+offset+self.out_dim[0], :]
         return cd_inp, cd_out
 
+
 class RandomMask:
     """ Extracts a random crop from CD input and CD output with a random mask
 
@@ -353,6 +372,7 @@ class RandomMask:
         mask_dataset (dictionary {string:string}): Dcitionary of mask category and scenes
         empty_bg, recent_bg, seg_ch,selected_frames: Check docstring of CDNet2014Loader
     """
+
     def __init__(self, out_dim, dataloader_mask, mask_prob=1.0, debug=False):
         self.dataloader_mask = dataloader_mask
         self.mask_prob = mask_prob
@@ -362,16 +382,14 @@ class RandomMask:
         if np.random.uniform() <= self.mask_prob:
             if self.debug:
                 print("Applying Random Masking")
-            sent_to_bg = np.random.randint(2)
+            sent_to_bg = np.random.randint(2)  # if true then send the mask behind already existing object
             mask_inp, mask_label = next(iter(self.dataloader_mask))
             for inp_type, im in cd_inp.items():
                 if (not inp_type.startswith('empty_bg')) and (im is not None):
                     masked_im = im.copy()
+                    mask = mask_label[:, :, 0]
                     if sent_to_bg:
-                        mask = mask_label[:, :, 0]
                         mask[cd_out[:, :, 0] == 1] = 0
-                    else:
-                        mask = mask_label[:, :, 0]
                     for k in range(masked_im.shape[-1]):
                         masked_im[:, :, k][mask == 1] = mask_inp[inp_type][:, :, k][mask == 1]
                     cd_inp[inp_type] = masked_im
@@ -389,6 +407,7 @@ class ToTensor:
     in CD input (e.g if only empty_bg_seg, empty_bg, current_fr_seg, current_fr are defined
     (not None), ouput size will be (1+3+1+3)xWxH = 8xWxH)
     """
+
     def __call__(self, cd_inp, cd_out):
         """
         Args:
@@ -408,6 +427,7 @@ class ToTensor:
 
         return inp_tensor, tvtf.ToTensor()(cd_out)
 
+
 class NormalizeTensor:
     """
     Normalizes input tensor channelwise using mean and std
@@ -419,6 +439,7 @@ class NormalizeTensor:
         std_seg ([_]): Standard deviation for segmentation channel
         segmentation_ch(bool): Bool for the usage of segmentation channel
     """
+
     def __init__(self, mean_rgb, mean_seg, std_rgb, std_seg, segmentation_ch=False):
         self.mean_rgb = mean_rgb
         self.std_rgb = std_rgb
@@ -451,6 +472,7 @@ class NormalizeTensor:
         inp_n = tvtf.Normalize(mean_vec, std_vec)(inp)
         return inp_n, out
 
+
 def _centerCrop(im, w_, h_):
     """
     Take center_crop
@@ -460,6 +482,7 @@ def _centerCrop(im, w_, h_):
     i = int((w-w_)/2)
     j = int((h-h_)/2)
     return im[j:j+h_, i:i+h_, :]
+
 
 def _resize(im, w_, h_):
     im_resized = cv2.resize(im, (w_, h_))

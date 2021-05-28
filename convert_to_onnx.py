@@ -2,14 +2,14 @@ import torch
 
 
 # model_name = "bs8_unetsmall" 
-model_name = "bs8_ddrnet_23_slim_2"
+model_name = "bs8_ddrnet_23_slim_all"
 # model_name = "bs8_no_segmentation_number2"
 # model_name = "bs8_no_segmentation_number2_mobilenetv3"
 # model_name = "BSUVNet-emptyBG-recentBG"
 
 MODEL_PATH = f"{model_name}.mdl"
-IMG_H=240
-IMG_W=320
+IMG_H=240*2
+IMG_W=320*2
 
 
 model = torch.load(MODEL_PATH).cuda().eval()
