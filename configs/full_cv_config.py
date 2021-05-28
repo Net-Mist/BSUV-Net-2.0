@@ -67,6 +67,18 @@ datasets_tr = {
 }
 
 datasets_test = {
+    0: {'baseline':['pedestrians'],
+        'cameraJitter':['traffic'],
+        'badWeather':['skating'],
+        'dynamicBackground':['boats', 'fountain01'],
+        'intermittentObjectMotion':['winterDriveway'],
+        'lowFramerate':['tramCrossroad_1fps'],
+        'nightVideos':['tramStation', 'winterStreet'],
+        'PTZ':['intermittentPan'],
+        'shadow':['busStation'],
+        'thermal':['library'],
+        'turbulence':['turbulence1']
+        },
     1: {'baseline':['highway'],
         'cameraJitter':['badminton'],
         'badWeather':[ 'blizzard'],
