@@ -158,7 +158,7 @@ if aug_ioa > 0:
         'intermittentObjectMotion':dataset_tr['intermittentObjectMotion']
     }
     mask_transforms = [
-        [aug.Resize((inp_size[0]*1.3, inp_size[1]*1.3))],
+        [aug.Resize((inp_size[0], inp_size[1]))],
         [aug.RandomCrop(inp_size)],
         *additional_augs_iom,
     ]
@@ -185,7 +185,7 @@ mean_seg = [x for x in [0.5]]
 std_seg = [x for x in [0.5]]
 
 transforms_tr = [
-    [aug.Resize((inp_size[0]*1.3, inp_size[1]*1.3))],
+    [aug.Resize((inp_size[0], inp_size[1]))],
     crop_and_aug,
     *additional_augs,
     [aug.ToTensor()],
@@ -194,7 +194,7 @@ transforms_tr = [
 ]
 
 transforms_test = [
-    [aug.Resize((inp_size[0]*1.3, inp_size[1]*1.3))],
+    [aug.Resize((inp_size[0], inp_size[1]))],
     [aug.CenterCrop(inp_size)],
     [aug.ToTensor()],
     [aug.NormalizeTensor(mean_rgb=mean_rgb, std_rgb=std_rgb,
@@ -274,6 +274,7 @@ st = time.time()
 for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple times
     for phase, tensorloader in [("Train", tensorloader_tr), ("Test", tensorloader_test)]:
         running_loss, running_acc, running_f = 0.0, 0.0, 0.0
+        running_prec, running_recall = 0.0, 0.0
         if phase == "Train":
             optimizer.zero_grad()
         for i, data in tqdm(enumerate(tensorloader)):
@@ -306,7 +307,10 @@ for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple t
             # print statistics
             running_loss += loss.item()
             running_acc += losses.acc(labels_1d, outputs_1d).item()
-            running_f += losses.f_score(labels_1d, outputs_1d).item()
+            prec, recall, f_score = losses.f_score(labels_1d, outputs_1d)
+            running_prec += prec
+            running_recall += recall
+            running_f += f_score
 
             del inputs, labels, outputs, labels_1d, outputs_1d
             if (i+1) % 10000 == 0:    # print every 2000 mini-batches
@@ -317,6 +321,8 @@ for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple t
         epoch_loss = running_loss / len(tensorloader)
         epoch_acc = running_acc / len(tensorloader)
         epoch_f = running_f / len(tensorloader)
+        epoch_prec = running_prec / len(tensorloader)
+        epoch_recall = running_recall / len(tensorloader)
 
         current_lr = lr
         print("::%s:: Epoch %d loss: %.1f, acc: %.3f, f_score: %.3f, lr x 1000: %.4f, elapsed time: %s" \
@@ -325,6 +331,8 @@ for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple t
         writer.add_scalar(f"{phase}/loss", epoch_loss, epoch)
         writer.add_scalar(f"{phase}/acc", epoch_acc, epoch)
         writer.add_scalar(f"{phase}/f", epoch_f, epoch)
+        writer.add_scalar(f"{phase}/prec", epoch_prec, epoch)
+        writer.add_scalar(f"{phase}/recall", epoch_recall, epoch)
 
         if phase.startswith("Test"):
             best_f = epoch_f

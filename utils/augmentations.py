@@ -193,8 +193,8 @@ class RandomCrop:
             CD output: Cropped CD output.
         """
         h, w, c = cd_out.shape
-        i = np.random.randint(low=0, high=w - self.out_dim[0])
-        j = np.random.randint(low=0, high=h - self.out_dim[1])
+        i = np.random.randint(low=0, high=w - self.out_dim[0]+1)
+        j = np.random.randint(low=0, high=h - self.out_dim[1]+1)
         for inp_type, im in cd_inp.items():
             if im is not None:
                 cd_inp[inp_type] = im[j:j+self.out_dim[1], i:i+self.out_dim[0], :]
@@ -224,15 +224,15 @@ class RandomJitteredCrop:
         if self.debug:
             print("Applying Jitter")
         if np.random.uniform() <= self.jitter_prob:
-            max_jitter_w = min(self.max_jitter, int((w-self.out_dim[0]) / 2) - 1)
-            max_jitter_h = min(self.max_jitter, int((h - self.out_dim[1]) / 2) - 1)
-            j = np.random.randint(low=max_jitter_w, high=w - (self.out_dim[0] + max_jitter_w))
-            i = np.random.randint(low=max_jitter_h, high=h - (self.out_dim[1] + max_jitter_h))
-            empty_bg_offset = [np.random.randint(-max_jitter_h, max_jitter_h), np.random.randint(-max_jitter_w, max_jitter_w)]
-            recent_bg_offset = [np.random.randint(-max_jitter_h, max_jitter_h), np.random.randint(-max_jitter_w, max_jitter_w)]
+            max_jitter_w = min(self.max_jitter, int((w-self.out_dim[0]) / 2))
+            max_jitter_h = min(self.max_jitter, int((h - self.out_dim[1]) / 2))
+            j = np.random.randint(low=max_jitter_w, high=w - (self.out_dim[0] + max_jitter_w)+1)
+            i = np.random.randint(low=max_jitter_h, high=h - (self.out_dim[1] + max_jitter_h)+1)
+            empty_bg_offset = [np.random.randint(-max_jitter_h, max_jitter_h+1), np.random.randint(-max_jitter_w, max_jitter_w+1)]
+            recent_bg_offset = [np.random.randint(-max_jitter_h, max_jitter_h+1), np.random.randint(-max_jitter_w, max_jitter_w+1)]
         else:
-            j = np.random.randint(low=0, high=w - self.out_dim[0])
-            i = np.random.randint(low=0, high=h - self.out_dim[1])
+            j = np.random.randint(low=0, high=w - self.out_dim[0]+1)
+            i = np.random.randint(low=0, high=h - self.out_dim[1]+1)
             empty_bg_offset = [0, 0]
             recent_bg_offset = [0, 0]
 
@@ -335,8 +335,8 @@ class RandomPanCrop:
 
         max_pixel_shift = min(self.max_pixel_shift, int((w-self.out_dim[0]) / self.num_frames_empty) - 1)
         pixel_shift = np.random.uniform(low=0, high=max_pixel_shift)
-        j = np.random.randint(low=0, high=w - (self.out_dim[0] + (pixel_shift * self.num_frames_empty)))
-        i = np.random.randint(low=0, high=h - self.out_dim[1])
+        j = np.random.randint(low=0, high=w - (self.out_dim[0] + (pixel_shift * self.num_frames_empty))+1)
+        i = np.random.randint(low=0, high=h - self.out_dim[1]+1)
         left_pan = np.random.randint(2)  # left pan if 1, right pan if 0
 
         if self.debug:

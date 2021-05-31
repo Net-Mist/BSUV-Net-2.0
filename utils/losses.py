@@ -4,9 +4,9 @@ import torch
 from torch.nn import functional as F
 
 
-def getValid(true, pred, nonvalid=-1):
-    """ On CDNEt dataset, the frmaes are not fully labeled. Only some predefined region of them are labeled.
-    This function extracts the labeled part from ground truth and the corresponding part from prediction as  1-D tensors
+def getValid(true, pred):
+    """ On CDNEt dataset, the frames are not fully labeled. Only some predefined region of them are labeled.
+    This function extracts the labeled part from ground truth and the corresponding part from prediction as 1-D tensors
     Args:
         true (tensor): Ground truth tensor of shape Bx1xHxW
         preds (tensor): Prediction tensor of shape Bx1xHxW
@@ -16,25 +16,16 @@ def getValid(true, pred, nonvalid=-1):
         (tensor): 1-D tensor containing the valid pixels of ground truth
         (tensor): 1-D tensor of prediction corresponding the valid ground truth pixels
     """
-    """# Turn predictions and labels into 1D arrays
-    true_valid = true.reshape(-1)
-    pred_valid = pred.reshape(-1)
-
-    # Mask of the known parts of the ground truth
-    mask =  torch.where(true_valid==nonvalid, torch.tensor(0), torch.tensor(1)).type(torch.bool)
-
-    # Discard the unknown parts from the predictions and labels
-    return torch.masked_select(true_valid, mask), torch.masked_select(pred_valid, mask)"""
-
     # Turn predictions and labels into 1D arrays
     true_valid = true.reshape(-1)
     pred_valid = pred.reshape(-1)
 
     # Mask of the known parts of the ground truth
-    mask = torch.where(true_valid == nonvalid, torch.tensor(0).cuda(), torch.tensor(1).cuda()).type(torch.bool)
+    mask = torch.where(true_valid < 0, torch.tensor(0).cuda(), torch.tensor(1).cuda()).type(torch.bool)
 
     # Discard the unknown parts from the predictions and labels
     return torch.masked_select(true_valid, mask), torch.masked_select(pred_valid, mask)
+
 
 def jaccard_loss(true, pred, smooth=100):
     """Computes the Jaccard loss, a.k.a the IoU loss.
@@ -54,6 +45,7 @@ def jaccard_loss(true, pred, smooth=100):
     jac = (intersection + smooth) / (torch.sum(true) + torch.sum(pred) - intersection + smooth)
     return (1 - jac) * smooth
 
+
 def weighted_crossentropy(true, pred, weight_pos=15, weight_neg=1):
     """Weighted cross entropy between ground truth and predictions
     Args:
@@ -69,6 +61,7 @@ def weighted_crossentropy(true, pred, weight_pos=15, weight_neg=1):
     weighted_bce = weight_vector * bce
     return -torch.mean(weighted_bce)
 
+
 def acc(true, pred):
     """Accuracy between ground truth and predictions
     Args:
@@ -78,6 +71,7 @@ def acc(true, pred):
         acc: Accuracy.
     """
     return torch.mean((true == pred.round()).float())
+
 
 def f_score(true, pred):
     """False Negative Rate between ground truth and predictions
@@ -89,17 +83,21 @@ def f_score(true, pred):
         (tensor): recall
         (tensor): f-score
     """
-    fn = torch.sum(true * (1 - pred))
-    fp = torch.sum((1 - true) * pred)
-    tp = torch.sum(true * pred)
-    prec = tp / (tp + fp)
-    recall = tp / (tp + fn)
 
-    if tp+fn == 0:
-        f_score = torch.tensor(1)
+    fn = torch.sum(true * (1 - pred)).item()
+    fp = torch.sum((1 - true) * pred).item()
+    tp = torch.sum(true * pred).item()
+
+    prec = tp / (tp + fp)
+
+    if tp + fn == 0:
+        recall = 1
+        f_score = 0
     elif tp == 0:
-        f_score = torch.tensor(0)
+        recall = 0
+        f_score = 0
     else:
+        recall = tp / (tp + fn)
         f_score = 2 * (prec * recall) / (prec + recall)
 
-    return f_score
+    return prec, recall, f_score
