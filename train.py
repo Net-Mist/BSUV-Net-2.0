@@ -307,7 +307,10 @@ for epoch in range(start_epoch, num_epochs):  # loop over the dataset multiple t
             # print statistics
             running_loss += loss.item()
             running_acc += losses.acc(labels_1d, outputs_1d).item()
-            running_prec, running_recall, running_f += losses.f_score(labels_1d, outputs_1d).item()
+            prec, recall, f_score = losses.f_score(labels_1d, outputs_1d)
+            running_prec += prec.item()
+            running_recall += recall.item()
+            running_f += f_score.item()
 
             del inputs, labels, outputs, labels_1d, outputs_1d
             if (i+1) % 10000 == 0:    # print every 2000 mini-batches

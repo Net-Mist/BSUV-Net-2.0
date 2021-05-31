@@ -1,3 +1,7 @@
+""" Code from https://github.com/ydhongHIT/DDRNet 
+Adapted for this training
+"""
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -186,6 +190,8 @@ class segmenthead(nn.Module):
         self.relu = nn.ReLU(inplace=True)
         self.conv2 = nn.Conv2d(interplanes, outplanes, kernel_size=1, padding=0, bias=True)
         self.scale_factor = scale_factor
+        self.upsample = nn.ConvTranspose2d(outplanes, outplanes, kernel_size=3, stride=self.scale_factor,
+                 padding=1, output_padding=1, bias=True)
 
         self.sigmoid = nn.Sigmoid()
 
@@ -194,11 +200,16 @@ class segmenthead(nn.Module):
         out = self.sigmoid(self.conv2(self.relu(self.bn2(x))))
 
         if self.scale_factor is not None:
+            out = self.upsample(out)
+
+        """
             height = x.shape[-2] * self.scale_factor
             width = x.shape[-1] * self.scale_factor
             out = F.interpolate(out,
                                 size=[height, width],
                                 mode='bilinear')
+        """
+
         return out
 
 

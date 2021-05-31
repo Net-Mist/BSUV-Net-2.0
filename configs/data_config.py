@@ -3,6 +3,7 @@ Configuration file for dataset paths
 """
 
 root_dir = "/data/datasets/BSUV"
+root_dir = "./dataset"
 save_dir = "./saved_models"
 
 # Paths for the CDNet2014 images, their background frames, segmentation maps and ground truths
