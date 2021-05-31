@@ -102,4 +102,4 @@ def f_score(true, pred):
     else:
         f_score = 2 * (prec * recall) / (prec + recall)
 
-    return f_score
+    return prec, recall, f_score
